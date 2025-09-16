@@ -84,32 +84,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Parallax effect for hero section (optional - can be removed for better mobile performance)
-    let ticking = false;
-    
-    function updateParallax() {
-        const scrolled = window.pageYOffset;
-        const parallax = document.querySelector('.hero');
-        const speed = scrolled * 0.5;
-        
-        if (parallax) {
-            parallax.style.transform = `translateY(${speed}px)`;
-        }
-        ticking = false;
-    }
-    
-    function requestParallax() {
-        if (!ticking) {
-            requestAnimationFrame(updateParallax);
-            ticking = true;
-        }
-    }
-    
-    // Only enable parallax on desktop
-    if (window.innerWidth > 768) {
-        window.addEventListener('scroll', requestParallax);
-    }
-
     // Show message function
     function showMessage(message, type) {
         // Remove existing messages
@@ -167,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    window.addEventListener('scroll', updateActiveNavLink);
+    window.addEventListener('scroll', debounce(updateActiveNavLink));
 
     // Initialize animations for elements already in view
     const elementsInView = document.querySelectorAll('.fade-in');
@@ -178,118 +152,53 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Add hover effects to service cards
-    const serviceCards = document.querySelectorAll('.service-card');
-    serviceCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-15px) scale(1.02)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(-10px) scale(1)';
-        });
-    });
-
-    // Add click effect to buttons
-    const buttons = document.querySelectorAll('.btn-primary-custom');
-    buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            // Create ripple effect
-            const ripple = document.createElement('span');
-            const rect = this.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = e.clientX - rect.left - size / 2;
-            const y = e.clientY - rect.top - size / 2;
-            
-            ripple.style.width = ripple.style.height = size + 'px';
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            ripple.style.position = 'absolute';
-            ripple.style.borderRadius = '50%';
-            ripple.style.background = 'rgba(255,255,255,0.3)';
-            ripple.style.transform = 'scale(0)';
-            ripple.style.animation = 'ripple 0.6s linear';
-            ripple.style.pointerEvents = 'none';
-            
-            this.style.position = 'relative';
-            this.style.overflow = 'hidden';
-            this.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
-    });
-
-    // Add CSS for ripple animation
+    // Add CSS for active nav links
     const style = document.createElement('style');
     style.textContent = `
-        @keyframes ripple {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-        
         .nav-link.active {
             color: var(--primary-color) !important;
             font-weight: 600;
         }
+        
+        /* Scroll to top button styles */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .scroll-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
     `;
     document.head.appendChild(style);
-
-    // Lazy loading for images
-    const images = document.querySelectorAll('img');
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.style.opacity = '0';
-                img.style.transition = 'opacity 0.3s ease';
-                
-                img.onload = () => {
-                    img.style.opacity = '1';
-                };
-                
-                observer.unobserve(img);
-            }
-        });
-    });
-    
-    images.forEach(img => imageObserver.observe(img));
 
     // Add scroll-to-top functionality
     const scrollToTopBtn = document.createElement('button');
     scrollToTopBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
     scrollToTopBtn.className = 'scroll-to-top';
-    scrollToTopBtn.style.cssText = `
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        width: 50px;
-        height: 50px;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        cursor: pointer;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-        z-index: 1000;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    `;
     
     document.body.appendChild(scrollToTopBtn);
     
     // Show/hide scroll-to-top button
     window.addEventListener('scroll', () => {
         if (window.scrollY > 300) {
-            scrollToTopBtn.style.opacity = '1';
-            scrollToTopBtn.style.visibility = 'visible';
+            scrollToTopBtn.classList.add('show');
         } else {
-            scrollToTopBtn.style.opacity = '0';
-            scrollToTopBtn.style.visibility = 'hidden';
+            scrollToTopBtn.classList.remove('show');
         }
     });
     
